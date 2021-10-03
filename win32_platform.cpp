@@ -2,17 +2,18 @@
 #include<ctime>
 #include "Platform_Common.cpp"
 
-bool running = true;
 struct Render_Info 
 {
 	void* buffer_memory;
 	int width, height;
 	BITMAPINFO bitmap_info;
 };
-
 Render_Info render_info;
+
 #include "Renderer.cpp"
 #include "game.cpp"
+
+bool running = true;
 
 LRESULT CALLBACK CallBack(
 	_In_ HWND   hwnd,
@@ -47,6 +48,7 @@ LRESULT CALLBACK CallBack(
 			render_info.bitmap_info.bmiHeader.biBitCount = 32;
 			render_info.bitmap_info.bmiHeader.biCompression = BI_RGB;
 			render_background();
+			//render();
 
 		} break;
 		default: 
@@ -77,12 +79,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	HDC hdc = GetDC(window);
 
 	Input input = {};
-	bool start = true;
-
-
-	int positionX = 0;
-	int positionY = 0;
-	clear_screen();
+	render_background();
 
 	float delta_time = 0.016666666f;
 	LARGE_INTEGER frame_begin_time;
@@ -98,16 +95,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	while (running) 
 	{
 		//Input
-		
 		for (int i = 0; i < BUTTON_COUNT; i++) 
 		{
 			input.buttons[i].changed = false;
 		}
-		
 		MSG message;
 		while (PeekMessage(&message, window, 0, 0, PM_REMOVE)) 
 		{
-			
 			switch (message.message) 
 			{
 				case WM_KEYUP:
@@ -146,14 +140,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				{
 					TranslateMessage(&message);
 					DispatchMessage(&message);	
-					
-				}
-				
+				}	
 			}
-			
 		}
-
-
 		//Simulate
 		simulate_game(&input,delta_time);
 
@@ -165,5 +154,4 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		delta_time = (float)(frame_end_time.QuadPart - frame_begin_time.QuadPart) / performance_frequency;
 		frame_begin_time = frame_end_time;
 	}
-	
 }

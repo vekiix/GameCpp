@@ -4,7 +4,7 @@
 
 float positionX = 0;
 float positionY = 0;
-float size = 3;
+float size = 1;
 float speed = 50;
 unsigned int color = 100;
 
@@ -12,11 +12,11 @@ unsigned int color = 100;
 void render()
 {
 	clear_screen();
-	positionX > 51 ? positionX = -51 : positionX;
-	positionY > 51 ? positionY = -51 : positionY;
-	positionX < -51 ? positionX = 51 : positionX;
-	positionY < -51 ? positionY = 51 : positionY;
-	draw_rectangle(positionX,positionY, 3, 3, 1);
+	positionX > 50 ? positionX = -50 : positionX;
+	positionY > 50 ? positionY = -50 : positionY;
+	positionX < -50 ? positionX = 50 : positionX;
+	positionY < -50 ? positionY = 50 : positionY;
+	draw_rectangle(positionX,positionY, size, 1.777778 * size, 1);
 
 
 	// Koristi O^2 - promijeniti u Renderer.cpp 

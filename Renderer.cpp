@@ -79,7 +79,7 @@ void draw_rectangle(float x, float y, float half_size_x, float half_size_y, unsi
 {
 	x *= render_info.width * render_scale;
 	y *= render_info.height * render_scale;
-	half_size_x *= render_info.height * render_scale;
+	half_size_x *= render_info.width * render_scale;
 	half_size_y *= render_info.height * render_scale;
 
 	x += render_info.width / 2.f;
