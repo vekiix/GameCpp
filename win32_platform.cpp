@@ -1,10 +1,18 @@
 #include<windows.h>
+#include<ctime>
+#include "Platform_Common.cpp"
 
 bool running = true;
-void *buffer_memory;
-int width;
-int height;
-BITMAPINFO bitmap_info;
+struct Render_Info 
+{
+	void* buffer_memory;
+	int width, height;
+	BITMAPINFO bitmap_info;
+};
+
+Render_Info render_info;
+#include "Renderer.cpp"
+#include "game.cpp"
 
 LRESULT CALLBACK CallBack(
 	_In_ HWND   hwnd,
@@ -25,19 +33,20 @@ LRESULT CALLBACK CallBack(
 		{
 			RECT rect;
 			GetClientRect(hwnd, &rect);
-			width = rect.right - rect.left;
-			height = rect.bottom - rect.top;
+			render_info.width = rect.right - rect.left;
+			render_info.height = rect.bottom - rect.top;
 
-			int buffer_size = width * height * sizeof(unsigned int);
-			if (buffer_memory)VirtualFree(buffer_memory, 0, MEM_RELEASE);
-			buffer_memory = VirtualAlloc(0, buffer_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+			int buffer_size = render_info.width * render_info.height * sizeof(unsigned int);
+			if (render_info.buffer_memory)VirtualFree(render_info.buffer_memory, 0, MEM_RELEASE);
+			render_info.buffer_memory = VirtualAlloc(0, buffer_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
-			bitmap_info.bmiHeader.biSize = sizeof(bitmap_info.bmiHeader);
-			bitmap_info.bmiHeader.biWidth = width;
-			bitmap_info.bmiHeader.biHeight = height;
-			bitmap_info.bmiHeader.biPlanes = 1;
-			bitmap_info.bmiHeader.biBitCount = 32;
-			bitmap_info.bmiHeader.biCompression = BI_RGB;
+			render_info.bitmap_info.bmiHeader.biSize = sizeof(render_info.bitmap_info.bmiHeader);
+			render_info.bitmap_info.bmiHeader.biWidth = render_info.width;
+			render_info.bitmap_info.bmiHeader.biHeight = render_info.height;
+			render_info.bitmap_info.bmiHeader.biPlanes = 1;
+			render_info.bitmap_info.bmiHeader.biBitCount = 32;
+			render_info.bitmap_info.bmiHeader.biCompression = BI_RGB;
+			render_background();
 
 		} break;
 		default: 
@@ -49,8 +58,7 @@ LRESULT CALLBACK CallBack(
 	return result;
 };
 
-
-int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
 
 	
@@ -68,28 +76,94 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
 	HWND window = CreateWindowA(window_class.lpszClassName,"GameCpp", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, 1280, 720, 0, 0, hInstance, 0);
 	HDC hdc = GetDC(window);
 
-	
+	Input input = {};
+	bool start = true;
+
+
+	int positionX = 0;
+	int positionY = 0;
+	clear_screen();
+
+	float delta_time = 0.016666666f;
+	LARGE_INTEGER frame_begin_time;
+	QueryPerformanceCounter(&frame_begin_time);
+
+	float performance_frequency;
+	{
+		LARGE_INTEGER perf;
+		QueryPerformanceFrequency(&perf);
+		performance_frequency = (float)perf.QuadPart;
+	}
+
 	while (running) 
 	{
 		//Input
+		
+		for (int i = 0; i < BUTTON_COUNT; i++) 
+		{
+			input.buttons[i].changed = false;
+		}
+		
 		MSG message;
 		while (PeekMessage(&message, window, 0, 0, PM_REMOVE)) 
 		{
-			TranslateMessage(&message);
-			DispatchMessage(&message);
+			
+			switch (message.message) 
+			{
+				case WM_KEYUP:
+				{
+				}
+				case WM_KEYDOWN:
+				{
+					unsigned int vk_code = (unsigned int)message.wParam;
+					bool is_down = ((message.lParam & (static_cast <unsigned __int64>(1) << static_cast <unsigned __int64>(31))) == 0);
+					switch (vk_code) 
+					{
+						case VK_UP: 
+						{
+							input.buttons[BUTTON_UP].is_down = is_down;
+							input.buttons[BUTTON_UP].changed = true;
+						}break;
+						case VK_DOWN: 
+						{
+							input.buttons[BUTTON_DOWN].is_down = is_down;
+							input.buttons[BUTTON_DOWN].changed = true;
+						}break;
+						case VK_LEFT: 
+						{
+							input.buttons[BUTTON_LEFT].is_down = is_down;
+							input.buttons[BUTTON_LEFT].changed = true;
+						}break;
+						case VK_RIGHT: 
+						{
+							input.buttons[BUTTON_RIGHT].is_down = is_down;
+							input.buttons[BUTTON_RIGHT].changed = true;
+						}break;
+					}
+
+				}break;
+				default: 
+				{
+					TranslateMessage(&message);
+					DispatchMessage(&message);	
+					
+				}
+				
+			}
+			
 		}
+
 
 		//Simulate
-		unsigned int* pixel =(unsigned int*)buffer_memory;
-		for (int y = 0; y < height * width; y++) 
-		{
-			
-				*pixel++ = 50;
-			
-		}
+		simulate_game(&input,delta_time);
 
 		//Render
-		StretchDIBits(hdc, 0, 0, width, height, 0, 0, width, height, buffer_memory, &bitmap_info, DIB_RGB_COLORS, SRCCOPY);
+		StretchDIBits(hdc, 0, 0, render_info.width, render_info.height, 0, 0, render_info.width, render_info.height, render_info.buffer_memory, &render_info.bitmap_info, DIB_RGB_COLORS, SRCCOPY);
+
+		LARGE_INTEGER frame_end_time;
+		QueryPerformanceCounter(&frame_end_time);
+		delta_time = (float)(frame_end_time.QuadPart - frame_begin_time.QuadPart) / performance_frequency;
+		frame_begin_time = frame_end_time;
 	}
 	
 }
