@@ -81,6 +81,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	Input input = {};
 	render_background();
 
+
+
 	float delta_time = 0.016666666f;
 	LARGE_INTEGER frame_begin_time;
 	QueryPerformanceCounter(&frame_begin_time);
@@ -113,25 +115,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					bool is_down = ((message.lParam & (static_cast <unsigned __int64>(1) << static_cast <unsigned __int64>(31))) == 0);
 					switch (vk_code) 
 					{
-						case VK_UP: 
-						{
-							input.buttons[BUTTON_UP].is_down = is_down;
-							input.buttons[BUTTON_UP].changed = true;
-						}break;
-						case VK_DOWN: 
-						{
-							input.buttons[BUTTON_DOWN].is_down = is_down;
-							input.buttons[BUTTON_DOWN].changed = true;
-						}break;
 						case VK_LEFT: 
 						{
+							input.buttons[BUTTON_LEFT].changed = is_down != input.buttons[BUTTON_LEFT].is_down;
 							input.buttons[BUTTON_LEFT].is_down = is_down;
-							input.buttons[BUTTON_LEFT].changed = true;
 						}break;
 						case VK_RIGHT: 
 						{
+							input.buttons[BUTTON_RIGHT].changed = is_down != input.buttons[BUTTON_RIGHT].is_down;
 							input.buttons[BUTTON_RIGHT].is_down = is_down;
-							input.buttons[BUTTON_RIGHT].changed = true;
 						}break;
 					}
 
@@ -144,8 +136,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 		//Simulate
-		simulate_game(&input,delta_time);
-
+		try
+		{
+			simulate_game(&input, delta_time);
+		}
+		catch(int score)
+		{
+			running = false;
+			
+		}
 		//Render
 		StretchDIBits(hdc, 0, 0, render_info.width, render_info.height, 0, 0, render_info.width, render_info.height, render_info.buffer_memory, &render_info.bitmap_info, DIB_RGB_COLORS, SRCCOPY);
 

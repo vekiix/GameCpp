@@ -6,7 +6,7 @@ void render_background()
 	unsigned int* pixel = (unsigned int*)render_info.buffer_memory;
 	for (int y = 0; y < render_info.height * render_info.width; y++)
 	{
-		*pixel++ = 0xff0055;
+		*pixel++ = 0x993366;
 	}
 }
 
@@ -15,7 +15,7 @@ void clear_screen()
 	unsigned int* pixel = (unsigned int*)render_info.buffer_memory;
 	for (int y = 0; y < render_info.height * render_info.width; y++)
 	{
-		*pixel++ = 0xff0055;
+		*pixel++ = 0x993366;
 	}
 }
 
@@ -45,19 +45,20 @@ void draw_rectangle_in_pixels(int x0, int y0, int x1, int y1, unsigned int color
 void draw_circle_in_pixels(int x, int y, int radius, unsigned int color)
 {
 	unsigned int* pixel = (unsigned int*)render_info.buffer_memory;
-	for (int y1 = 0; y1 < render_info.height; y1++) 
+	int br=0,x1,y1;
+	for (int px = 0; px < render_info.height; px++)
 	{
-		for (int x1 = 0; x1 < render_info.width; x1++) 
+		y1 = px - px * br;
+		x1 = br;
+		if (px % render_info.width == 0)br++;
+		double a = pow((double)((double)x - (double)x1), 2);
+		double b = pow((double)((double)y - (double)y1), 2);
+		if (sqrt(a + b) <= radius)
 		{
-			double a = pow((double)((double)x - (double)x1), 2);
-			double b = pow((double)((double)y - (double)y1), 2);
-			if (sqrt(a + b) <= radius)
-			{
-				*(pixel) = color;
-			}
-			//C6269 - dereference ignored!	
-			*pixel++;
+			*(pixel) = color;
 		}
+		//C6269 - dereference ignored!	
+		*pixel++;
 	}
 }
 
